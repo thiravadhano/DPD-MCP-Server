@@ -1,0 +1,18 @@
+{
+  "name": "dpd-mcp",
+  "version": "1.0.0",
+  "description": "Digital Pali Dictionary MCP Server for Claude",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup-db.js",
+    "install-mcp": "node scripts/install.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^12.8.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

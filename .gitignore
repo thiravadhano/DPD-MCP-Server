@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# SQLite temp files
+dpd_lite.db-shm
+dpd_lite.db-wal
+
+# Database (downloaded by npm run setup)
+dpd_lite.db
+
+# Dependencies
+node_modules/
