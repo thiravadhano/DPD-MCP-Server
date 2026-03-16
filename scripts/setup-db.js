@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * setup-db.js — download dpd_lite.db แล้วเพิ่ม indexes และ FTS5
- * รันครั้งเดียวก่อนใช้งาน server
+ * setup-db.js — download dpd_lite.db and build indexes + FTS5
+ * Run once before starting the server
  */
 
 import Database from "better-sqlite3";
@@ -34,7 +34,7 @@ async function downloadFile(url, dest) {
           received += chunk.length;
           if (total) {
             const pct = ((received / total) * 100).toFixed(0);
-            process.stdout.write(`\r  ดาวน์โหลด... ${pct}%`);
+            process.stdout.write(`\r  Downloading... ${pct}%`);
           }
         });
         res.pipe(file);
@@ -47,17 +47,17 @@ async function downloadFile(url, dest) {
 }
 
 if (!fs.existsSync(DB_PATH)) {
-  console.log("📥 ไม่พบ dpd_lite.db — กำลังดาวน์โหลดจาก GitHub Release...");
+  console.log("📥 dpd_lite.db not found — downloading from GitHub Release...");
   try {
     await downloadFile(DB_URL, DB_PATH);
-    console.log("  ✅ ดาวน์โหลดสำเร็จ");
+    console.log("  ✅ Download complete");
   } catch (err) {
-    console.error("❌ ดาวน์โหลดไม่สำเร็จ:", err.message);
-    console.error("   ลองดาวน์โหลดเองที่:", DB_URL);
+    console.error("❌ Download failed:", err.message);
+    console.error("   Download manually at:", DB_URL);
     process.exit(1);
   }
 } else {
-  console.log("  ⏭️  พบ dpd_lite.db แล้ว — ข้ามการดาวน์โหลด");
+  console.log("  ⏭️  dpd_lite.db already exists — skipping download");
 }
 
 const db = new Database(DB_PATH);
@@ -78,7 +78,7 @@ for (const { name, sql } of indexes) {
   console.log(`  ✅ index: ${name}`);
 }
 
-// ── FTS5 สำหรับค้นหาจากความหมาย ─────────────────────────────────────
+// ── FTS5 for meaning search ───────────────────────────────────────────
 const ftsExists = db
   .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='dpd_fts'")
   .get();

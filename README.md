@@ -1,50 +1,60 @@
 # DPD MCP Server — Digital Pali Dictionary
 
-MCP Server สำหรับ Claude ที่ให้ค้นหาคำศัพท์บาลีจาก [Digital Pali Dictionary (DPD)](https://digitalpalidictionary.github.io/)
+An MCP server for Claude that provides Pali word lookup from the [Digital Pali Dictionary (DPD)](https://digitalpalidictionary.github.io/).
 
 ## Tools
 
-| Tool | ใช้เมื่อ |
-|------|---------|
-| `lookup_pali_word` | ค้นหาจากคำบาลี รองรับทุกรูปวิภัตติ |
-| `search_pali_meaning` | ค้นหาจากความหมายอังกฤษ |
-| `lookup_pali_root` | ค้นหา word family จากรากศัพท์ |
+| Tool | Description |
+|------|-------------|
+| `lookup_pali_word` | Look up a Pali word — supports all inflected forms, compounds, and sandhi |
+| `search_pali_meaning` | Search for Pali words by English meaning |
+| `lookup_pali_root` | Find all words in a word family by root |
 
 ## Installation
 
 **Requirements:** Node.js ≥ 18
 
 ```bash
-# 1. Clone repo
-git clone https://github.com/YOUR_USERNAME/dpd-mcp.git
+# 1. Clone the repo
+git clone https://github.com/thiravadhano/DPD-MCP-Server.git dpd-mcp
 cd dpd-mcp
 
-# 2. Install (จะ download dpd.db อัตโนมัติ ~300 MB)
+# 2. Install dependencies
 npm install
+
+# 3. Download the database and build indexes (~500 MB)
+npm run setup
+
+# 4. Register with Claude Desktop
+npm run install-mcp
 ```
 
-## Add to Claude Desktop
+Then **restart Claude Desktop** — the server is ready to use.
 
-เปิดไฟล์ `~/Library/Application Support/Claude/claude_desktop_config.json` แล้วเพิ่ม:
+## Manual config (optional)
+
+If you prefer to edit `claude_desktop_config.json` manually, add:
 
 ```json
 {
   "mcpServers": {
     "dpd-pali": {
       "command": "node",
-      "args": ["/FULL/PATH/TO/dpd-mcp/src/server.js"]
+      "args": ["/absolute/path/to/dpd-mcp/server.js"]
     }
   }
 }
 ```
 
-แล้ว restart Claude Desktop ครับ
+Config file locations:
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
 ## Manual DB download
 
-ถ้า auto-download ไม่ทำงาน ให้ download dpd.db มาวางที่ `data/dpd.db` ด้วยตนเองครับ:
+If `npm run setup` fails to download, get the database directly from the [GitHub Release](https://github.com/thiravadhano/DPD-MCP-Server/releases/tag/claude-pali-mcp) and place it as `dpd_lite.db` in the project root, then re-run:
 
 ```bash
-mkdir -p data
-node scripts/download-db.js
+npm run setup
 ```

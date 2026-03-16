@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * install.js — เพิ่ม dpd-pali ลงใน Claude Desktop config อัตโนมัติ
+ * install.js — register dpd-pali in Claude Desktop config automatically
  */
 
 import fs from "fs";
@@ -11,7 +11,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SERVER_PATH = path.resolve(__dirname, "..", "server.js");
 
-// หา config path ตาม OS
+// Resolve config path by OS
 function getConfigPath() {
   const platform = process.platform;
   if (platform === "darwin") {
@@ -31,42 +31,42 @@ function getConfigPath() {
 
 const configPath = getConfigPath();
 
-// อ่าน config ที่มีอยู่ หรือสร้างใหม่
+// Read existing config or start fresh
 let config = { mcpServers: {} };
 if (fs.existsSync(configPath)) {
   try {
     config = JSON.parse(fs.readFileSync(configPath, "utf8"));
     config.mcpServers ??= {};
   } catch {
-    console.error("❌ อ่าน config ไม่ได้ — ตรวจสอบว่า JSON ถูกต้อง:", configPath);
+    console.error("❌ Failed to parse config — check JSON syntax:", configPath);
     process.exit(1);
   }
 } else {
-  // สร้างโฟลเดอร์ถ้ายังไม่มี
+  // Create directory if it doesn't exist
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
-  console.log("📁 สร้างโฟลเดอร์:", path.dirname(configPath));
+  console.log("📁 Created config directory:", path.dirname(configPath));
 }
 
-// ตรวจว่ามีอยู่แล้วหรือยัง
+// Check if already registered
 if (config.mcpServers["dpd-pali"]) {
   const existing = config.mcpServers["dpd-pali"].args?.[0];
   if (existing === SERVER_PATH) {
-    console.log("✅ dpd-pali ติดตั้งอยู่แล้ว (path ตรงกัน)");
+    console.log("✅ dpd-pali is already registered (path matches)");
     console.log("   Config:", configPath);
     process.exit(0);
   }
-  console.log("⚠️  พบ dpd-pali เดิม — จะอัปเดต path ใหม่");
+  console.log("⚠️  Found existing dpd-pali entry — updating path");
 }
 
-// เพิ่ม / อัปเดต entry
+// Add / update entry
 config.mcpServers["dpd-pali"] = {
   command: "node",
   args: [SERVER_PATH],
 };
 
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-console.log("✅ ติดตั้งสำเร็จ!");
+console.log("✅ Installed successfully!");
 console.log("   Server:", SERVER_PATH);
 console.log("   Config:", configPath);
 console.log("");
-console.log("👉 Restart Claude Desktop แล้วใช้งานได้เลยครับ");
+console.log("👉 Restart Claude Desktop to activate the MCP server");

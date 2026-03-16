@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
  * DPD MCP Server — Digital Pali Dictionary
- * แปลงจาก Python เป็น Node.js
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -18,10 +17,10 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = path.join(__dirname, "dpd_lite.db");
 
-// ── ตรวจสอบ DB ──────────────────────────────────────────────────────
+// ── Check DB ─────────────────────────────────────────────────────────
 if (!fs.existsSync(DB_PATH)) {
-  console.error("❌ dpd.db not found at:", DB_PATH);
-  console.error("   Run: node scripts/setup-db.js");
+  console.error("❌ dpd_lite.db not found at:", DB_PATH);
+  console.error("   Run: npm run setup");
   process.exit(1);
 }
 
@@ -30,12 +29,12 @@ db.pragma("query_only = true");
 db.pragma("cache_size = -32000"); // 32 MB cache
 db.pragma("mmap_size = 268435456"); // 256 MB memory-mapped I/O
 
-// ตรวจสอบว่า FTS5 พร้อมใช้งาน (ต้องรัน setup-db.js ก่อน)
+// Check if FTS5 is available (requires npm run setup)
 const hasFts = db
   .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='dpd_fts'")
   .get();
 
-// ── Helper functions ─────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────
 
 function headwordIdsFromLookup(word) {
   const row = db
@@ -71,14 +70,14 @@ function buildWordOutput(word, results) {
   let output = `### DPD: '${word}'\n\n`;
   for (const r of results) {
     output += `**${r.lemma}** (${r.pos})\n`;
-    if (r.meaning_1)   output += `- ความหมาย: ${r.meaning_1}\n`;
-    if (r.meaning_lit) output += `- ตามตัวอักษร: ${r.meaning_lit}\n`;
-    if (r.grammar)     output += `- ไวยากรณ์: ${r.grammar}\n`;
-    if (r.root_key)    output += `- ราก: ${r.root_key}\n`;
-    if (r.construction) output += `- โครงสร้าง: ${r.construction}\n`;
-    if (r.sanskrit)    output += `- สันสกฤต: ${r.sanskrit}\n`;
-    if (r.sutta_1)     output += `- แหล่งอ้างอิง: ${r.sutta_1}\n`;
-    if (r.example_1)   output += `- ตัวอย่าง: ${r.example_1.slice(0, 150)}...\n`;
+    if (r.meaning_1)   output += `- Meaning: ${r.meaning_1}\n`;
+    if (r.meaning_lit) output += `- Literal: ${r.meaning_lit}\n`;
+    if (r.grammar)     output += `- Grammar: ${r.grammar}\n`;
+    if (r.root_key)    output += `- Root: ${r.root_key}\n`;
+    if (r.construction) output += `- Construction: ${r.construction}\n`;
+    if (r.sanskrit)    output += `- Sanskrit: ${r.sanskrit}\n`;
+    if (r.sutta_1)     output += `- Source: ${r.sutta_1}\n`;
+    if (r.example_1)   output += `- Example: ${r.example_1.slice(0, 150)}...\n`;
     output += "\n";
   }
   return output;
@@ -96,14 +95,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "lookup_pali_word",
       description:
-        "ค้นหาคำบาลีจาก Digital Pali Dictionary (DPD) รองรับทุกรูปวิภัตติ สมาส และสนธิ ใช้เมื่อไม่แน่ใจความหมาย part of speech หรือ root ของคำ",
+        "Look up a Pali word in the Digital Pali Dictionary (DPD). Supports all inflected forms, compounds, and sandhi. Use when unsure of a word's meaning, part of speech, or root.",
       inputSchema: {
         type: "object",
         properties: {
           word: {
             type: "string",
             description:
-              "คำบาลีในรูปแบบ Roman script เช่น saṅghādisesaṃ, pācittiyaṃ, bhikkhu",
+              "Pali word in Roman script, e.g. saṅghādisesaṃ, pācittiyaṃ, bhikkhu",
           },
         },
         required: ["word"],
@@ -112,18 +111,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "search_pali_meaning",
       description:
-        "ค้นหาคำบาลีจากความหมายภาษาอังกฤษ ใช้เมื่อต้องการหาว่าคำบาลีที่แปลว่า X คืออะไร",
+        "Search for Pali words by English meaning. Use when you want to find what Pali word means X.",
       inputSchema: {
         type: "object",
         properties: {
           meaning: {
             type: "string",
             description:
-              "ความหมายภาษาอังกฤษ เช่น 'defeat', 'confession', 'wrong-doing'",
+              "English meaning, e.g. 'defeat', 'confession', 'wrong-doing'",
           },
           limit: {
             type: "integer",
-            description: "จำนวนผลลัพธ์สูงสุด (default 5)",
+            description: "Maximum number of results (default 5)",
             default: 5,
           },
         },
@@ -133,13 +132,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "lookup_pali_root",
       description:
-        "ค้นหาคำบาลีทั้งหมดที่มาจากรากศัพท์เดียวกัน ใช้เมื่อต้องการวิเคราะห์ word family",
+        "Find all Pali words derived from the same root. Use when analyzing a word family.",
       inputSchema: {
         type: "object",
         properties: {
           root: {
             type: "string",
-            description: "รากศัพท์บาลี เช่น √gam, √kar, √bhū",
+            description: "Pali root, e.g. √gam, √kar, √bhū",
           },
         },
         required: ["root"],
@@ -151,11 +150,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
-  // ── Tool 1: lookup จากรูปคำ ──────────────────────────────────────
+  // ── Tool 1: lookup by word form ──────────────────────────────────
   if (name === "lookup_pali_word") {
     const word = (args.word || "").trim();
     if (!word) {
-      return { content: [{ type: "text", text: "กรุณาระบุคำบาลี" }] };
+      return { content: [{ type: "text", text: "Please provide a Pali word." }] };
     }
 
     const ids = headwordIdsFromLookup(word);
@@ -168,7 +167,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         .all(...ids);
       results = rows.map(formatHeadword);
     } else {
-      // fallback: ค้นจาก lemma_1 ตรงๆ
+      // fallback: search lemma_1 directly
       const rows = db
         .prepare("SELECT * FROM dpd_headwords WHERE lemma_1 LIKE ? LIMIT 5")
         .all(`${word}%`);
@@ -180,7 +179,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: "text",
-            text: `ไม่พบคำว่า '${word}' ใน DPD — อาจเป็นคำประสม สนธิ หรือสะกดต่างกัน`,
+            text: `'${word}' not found in DPD — it may be a compound, sandhi form, or alternate spelling.`,
           },
         ],
       };
@@ -189,14 +188,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return { content: [{ type: "text", text: buildWordOutput(word, results) }] };
   }
 
-  // ── Tool 2: ค้นจากความหมายอังกฤษ ───────────────────────────────
+  // ── Tool 2: search by English meaning ───────────────────────────
   if (name === "search_pali_meaning") {
     const meaning = (args.meaning || "").trim();
     const limit = args.limit || 5;
 
     let rows;
     if (hasFts) {
-      // FTS5: เร็วกว่า LIKE มาก
+      // FTS5: much faster than LIKE
       rows = db
         .prepare(
           `SELECT h.lemma_1, h.pos, h.meaning_1, h.grammar
@@ -207,7 +206,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         )
         .all(`"${meaning.replace(/"/g, '""')}"`, limit);
     } else {
-      // fallback ถ้ายังไม่ได้รัน setup-db.js
+      // fallback if setup has not been run yet
       rows = db
         .prepare(
           `SELECT lemma_1, pos, meaning_1, grammar FROM dpd_headwords
@@ -219,19 +218,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     if (rows.length === 0) {
       return {
-        content: [{ type: "text", text: `ไม่พบคำที่มีความหมายว่า '${meaning}'` }],
+        content: [{ type: "text", text: `No words found with meaning '${meaning}'.` }],
       };
     }
 
-    let output = `### คำบาลีที่มีความหมายว่า '${meaning}'\n\n`;
+    let output = `### Pali words meaning '${meaning}'\n\n`;
     for (const r of rows) {
       output += `**${r.lemma_1}** (${r.pos}) — ${r.meaning_1}\n`;
-      if (r.grammar) output += `  ไวยากรณ์: ${r.grammar}\n`;
+      if (r.grammar) output += `  Grammar: ${r.grammar}\n`;
     }
     return { content: [{ type: "text", text: output }] };
   }
 
-  // ── Tool 3: ค้นจากรากศัพท์ ──────────────────────────────────────
+  // ── Tool 3: lookup by root ───────────────────────────────────────
   if (name === "lookup_pali_root") {
     const root = (args.root || "").trim().replace(/^√/, "");
     const rootKey = `√${root}`;
@@ -248,18 +247,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     if (rows.length === 0) {
       return {
-        content: [{ type: "text", text: `ไม่พบคำที่มีรากศัพท์ '${root}'` }],
+        content: [{ type: "text", text: `No words found with root '${root}'.` }],
       };
     }
 
-    let output = `### คำที่มาจากราก ${rootKey}\n\n`;
+    let output = `### Words from root ${rootKey}\n\n`;
     for (const r of rows) {
       output += `**${r.lemma_1}** (${r.pos}) — ${r.meaning_1}\n`;
     }
     return { content: [{ type: "text", text: output }] };
   }
 
-  return { content: [{ type: "text", text: `ไม่รู้จัก tool: ${name}` }] };
+  return { content: [{ type: "text", text: `Unknown tool: ${name}` }] };
 });
 
 // ── Start ─────────────────────────────────────────────────────────────
