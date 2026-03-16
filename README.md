@@ -58,3 +58,13 @@ If `npm run setup` fails to download, get the database directly from the [GitHub
 ```bash
 npm run setup
 ```
+
+## License & Attribution
+
+The dictionary data (`dpd_lite.db`) is derived from the **[Digital Pali Dictionary (DPD)](https://digitalpalidictionary.github.io/)** by Bodhirasa, licensed under **[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)**.
+
+- You may use and share this MCP server freely for personal and non-commercial purposes.
+- Commercial use of the dictionary data requires permission from the original author.
+- Please credit the Digital Pali Dictionary when referencing data from this tool.
+
+This MCP server wrapper is released under the MIT License.
